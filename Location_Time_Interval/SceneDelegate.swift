@@ -9,24 +9,17 @@ import UIKit
 import CoreData
 import CoreLocation
 
-@available(iOS 13.0, *)
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelegate {
 
     var window: UIWindow?
-    
     var locationManager = CLLocationManager()
     var backgroundUpdateTask: UIBackgroundTaskIdentifier!
     var bgtimer = Timer()
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var current_time = NSDate().timeIntervalSince1970
-
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
-    var models = [LocationListItem]()
-    
     var customLocations  = [LocationListItem]()
-
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -71,21 +64,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     
     
     func doBackgroundTask() {
-        
         DispatchQueue.main.async {
-            
             self.beginBackgroundUpdateTask()
-            
             self.StartupdateLocation()
-            // 1*60
-            /*
-            self.bgtimer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(AppDelegate.bgtimer(_:)), userInfo: nil, repeats: true)
-//            RunLoop.current.add(self.bgtimer, forMode: RunLoopMode.defaultRunLoopMode)
+            self.bgtimer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(SceneDelegate.bgtimer(_:)), userInfo: nil, repeats: true)
             RunLoop.current.add(self.bgtimer, forMode: RunLoop.Mode.default)
             RunLoop.current.run()
-            
             self.endBackgroundUpdateTask()
-            */
         }
     }
     
@@ -100,15 +85,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
         self.backgroundUpdateTask = UIBackgroundTaskIdentifier.invalid
     }
     
-    
     func StartupdateLocation() {
         locationManager.delegate = self
-        
         //Background Updates
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.showsBackgroundLocationIndicator = true
-        
-        
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone
         locationManager.requestAlwaysAuthorization()
@@ -119,24 +100,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Error while requesting new coordinates")
+        StartupdateLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
         guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
-//        let locValue:CLLocationCoordinate2D = manager.location!.coordinate
-        
         self.latitude = locValue.latitude
         self.longitude = locValue.longitude
-        
         print("New Coordinates: ")
-//        print(self.latitude)
-//        print(self.longitude)
         print(locValue.latitude)
         print(locValue.longitude)
-        
-        // ❌❌❌❌❌❌❌❌❌❌ Store Lattitude and longitude here ❌❌❌❌❌❌❌❌❌❌
         createItem(lattitude: "\(self.latitude)", longitude: "\(self.longitude)")
+        
         
     }
     
@@ -146,20 +121,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     
     func updateLocation() {
         self.locationManager.startUpdatingLocation()
-        self.locationManager.stopUpdatingLocation()
     }
-    
-    
-    
-    
-//    func fetchCityAndCountry(from location: CLLocation, completion: @escaping (_ city: String?, _ country:  String?, _ error: Error?) -> ()) {
-//        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
-//            completion(placemarks?.first?.locality,
-//                       placemarks?.first?.country,
-//                       error)
-//        }
-//    }
-    
 
 }
 
@@ -172,28 +134,13 @@ extension SceneDelegate {
     
     func getAllItem() {
         do {
-            models = try context.fetch(LocationListItem.fetchRequest())
-            
-            DispatchQueue.main.async {
-                //reload 
-            }
-            
-        } catch {
-            
-        }
-    }
-    
-    func getAllDataaaa() {
-        
-        do {
-            var fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "LocationListItem")
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "LocationListItem")
             let results  = try context.fetch(fetchRequest)
             let locations = results as! [LocationListItem]
             customLocations = locations
         } catch let error as NSError {
             print("Could not fetch \(error)")
         }
-        
     }
     
     // Create --------------->
@@ -205,13 +152,9 @@ extension SceneDelegate {
         newItem.longitude = longitude
         do {
             try context.save()
-//            getAllItem()
-            getAllDataaaa()
-            
-//            print("🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️ \(lattitude) --- \(longitude)🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️🧖🏼‍♀️")
-
-        } catch {
-            
+            getAllItem()
+        } catch let error as NSError {
+            print("Could not fetch \(error)")
         }
     }
     
@@ -223,10 +166,9 @@ extension SceneDelegate {
         item.longitude = newLongitude
         do {
             try context.save()
-//            getAllItem()
-            getAllDataaaa()
-        } catch {
-            
+            getAllItem()
+        } catch let error as NSError {
+            print("Could not fetch \(error)")
         }
     }
     

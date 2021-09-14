@@ -7,27 +7,18 @@
 
 import UIKit
 import CoreData
-import CoreLocation
 
-@available(iOS 13.0, *)
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate {
     var window: UIWindow?
-    var locationManager = CLLocationManager()
-    var backgroundUpdateTask: UIBackgroundTaskIdentifier!
-    var bgtimer = Timer()
-    var latitude: Double = 0.0
-    var longitude: Double = 0.0
-    var current_time = NSDate().timeIntervalSince1970
     
     var applicationDocumentsDirectory: URL {
-           return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last!
-       }
-    
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last!
+    }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        print("File path === \(applicationDocumentsDirectory) === ")
+        print("File path For Core Data === \(applicationDocumentsDirectory)")
         return true
     }
     
@@ -88,83 +79,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         }
-    }
-    
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        print("Entering Backround")
-        self.doBackgroundTask()
-    }
-    
-    func doBackgroundTask() {
-        
-        DispatchQueue.main.async {
-            
-            self.beginBackgroundUpdateTask()
-            
-            self.StartupdateLocation()
-            // 1*60
-            self.bgtimer = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(AppDelegate.bgtimer(_:)), userInfo: nil, repeats: true)
-//            RunLoop.current.add(self.bgtimer, forMode: RunLoopMode.defaultRunLoopMode)
-            RunLoop.current.add(self.bgtimer, forMode: RunLoop.Mode.default)
-            RunLoop.current.run()
-            
-            self.endBackgroundUpdateTask()
-            
-        }
-    }
-    
-    
-    func beginBackgroundUpdateTask() {
-        self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-            self.endBackgroundUpdateTask()
-        })
-    }
-    
-    func endBackgroundUpdateTask() {
-        UIApplication.shared.endBackgroundTask(self.backgroundUpdateTask)
-        self.backgroundUpdateTask = UIBackgroundTaskIdentifier.invalid
-    }
-    
-    func StartupdateLocation() {
-        locationManager.delegate = self
-        
-        //Background Updates
-        locationManager.allowsBackgroundLocationUpdates = true
-        locationManager.showsBackgroundLocationIndicator = true
-        
-        
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = kCLDistanceFilterNone
-        locationManager.requestAlwaysAuthorization()
-        locationManager.allowsBackgroundLocationUpdates = true
-        locationManager.pausesLocationUpdatesAutomatically = false
-        locationManager.startUpdatingLocation()
-    }
-    
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Error while requesting new coordinates")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
-        let locValue:CLLocationCoordinate2D = manager.location!.coordinate
-        
-        self.latitude = locValue.latitude
-        self.longitude = locValue.longitude
-        
-        print("New Coordinates: ")
-        print(self.latitude)
-        print(self.longitude)
-    }
-    
-    @objc func bgtimer(_ timer:Timer!){
-        self.updateLocation()
-    }
-    
-    func updateLocation() {
-        self.locationManager.startUpdatingLocation()
-        self.locationManager.stopUpdatingLocation()
     }
     
 }
